@@ -15,6 +15,9 @@
  */
 package com.example.android.sunshine.app;
 
+import android.annotation.TargetApi;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -34,6 +37,8 @@ import com.example.android.sunshine.app.data.WeatherContract;
 public class SettingsActivity extends PreferenceActivity
         implements Preference.OnPreferenceChangeListener {
 
+    // since we use the preference change initially to populate the summary
+    // field, we'll ignore that change at start of the activity
     boolean mBindingPreference;
 
     @Override
@@ -55,6 +60,7 @@ public class SettingsActivity extends PreferenceActivity
      */
     private void bindPreferenceSummaryToValue(Preference preference) {
         mBindingPreference = true;
+
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(this);
 
@@ -64,6 +70,7 @@ public class SettingsActivity extends PreferenceActivity
                 PreferenceManager
                         .getDefaultSharedPreferences(preference.getContext())
                         .getString(preference.getKey(), ""));
+
         mBindingPreference = false;
     }
 
@@ -71,7 +78,7 @@ public class SettingsActivity extends PreferenceActivity
     public boolean onPreferenceChange(Preference preference, Object value) {
         String stringValue = value.toString();
 
-
+        // are we starting the preference activity?
         if ( !mBindingPreference ) {
             if (preference.getKey().equals(getString(R.string.pref_location_key))) {
                 FetchWeatherTask weatherTask = new FetchWeatherTask(this);
@@ -82,7 +89,6 @@ public class SettingsActivity extends PreferenceActivity
                 getContentResolver().notifyChange(WeatherContract.WeatherEntry.CONTENT_URI, null);
             }
         }
-
 
         if (preference instanceof ListPreference) {
             // For list preferences, look up the correct display value in
@@ -99,4 +105,9 @@ public class SettingsActivity extends PreferenceActivity
         return true;
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @Override
+    public Intent getParentActivityIntent() {
+        return super.getParentActivityIntent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    }
 }
